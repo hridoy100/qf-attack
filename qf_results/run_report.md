@@ -1,11 +1,11 @@
 # QF-Attack: measured run report
 
-Profile: demo; prompts: 2; device: mps.
+Profile: demo; prompts: 2; device: cuda.
 All search losses below are TEXT-TEXT cosine, not image CLIP scores.
 
 | Case | Objective | Method | Suffix | Objective cosine | Unique candidates |
 |---|---|---|---|---:|---:|
-| 0 | untargeted | random | <code>^FF1%</code> | 0.86276 | 1 |
+| 0 | untargeted | random | <code>^FF1%</code> | 0.86275 | 1 |
 | 0 | untargeted | greedy | <code>FC·!U</code> | 0.67223 | 306 |
 | 0 | untargeted | genetic | <code>&#124;ZPV&gt;</code> | 0.69346 | 106 |
 | 0 | untargeted | budget_random | <code>E2&#124;,D</code> | 0.69014 | 106 |
@@ -18,7 +18,7 @@ All search losses below are TEXT-TEXT cosine, not image CLIP scores.
 | 1 | untargeted | genetic | <code>CT7#S</code> | 0.65914 | 103 |
 | 1 | untargeted | budget_random | <code>+&#124;SOX</code> | 0.70216 | 103 |
 | 1 | targeted | random | <code>#5)CT</code> | 0.75769 | 1 |
-| 1 | targeted | greedy | <code>GP38I</code> | 0.59528 | 306 |
+| 1 | targeted | greedy | <code>GP38I</code> | 0.59529 | 306 |
 | 1 | targeted | genetic | <code>Y!KD8</code> | 0.71072 | 94 |
 | 1 | targeted | budget_random | <code>X27QH</code> | 0.74572 | 94 |
 
@@ -33,14 +33,14 @@ Target removal also requires retained-content inspection; CLIP similarity alone 
 
 | Objective | Method | Valid pairs | Mean drop | Retained-content drop |
 |---|---|---:|---:|---:|
-| untargeted | random | 2 | 0.002903267741203308 | 0.010200604796409607 |
-| untargeted | greedy | 2 | -0.02236771583557129 | -0.0072832778096199036 |
-| untargeted | genetic | 2 | -0.02772088348865509 | 0.00842209905385971 |
-| untargeted | budget_random | 2 | 0.029608607292175293 | 0.019840985536575317 |
-| targeted | random | 2 | -0.012225925922393799 | -0.00640704482793808 |
-| targeted | greedy | 2 | -0.0032863765954971313 | 0.011839881539344788 |
-| targeted | genetic | 2 | 0.011972464621067047 | 0.051649920642375946 |
-| targeted | budget_random | 2 | -0.014364682137966156 | -0.0073309168219566345 |
+| untargeted | random | 2 | 0.00024358928203582764 | 0.009134702384471893 |
+| untargeted | greedy | 2 | -0.024003416299819946 | -0.007761672139167786 |
+| untargeted | genetic | 2 | -0.03454551100730896 | 0.0058557018637657166 |
+| untargeted | budget_random | 2 | 0.04378437250852585 | 0.022329002618789673 |
+| targeted | random | 2 | -0.01507444679737091 | -0.006088554859161377 |
+| targeted | greedy | 2 | -0.004117012023925781 | 0.009419262409210205 |
+| targeted | genetic | 2 | 0.009284399449825287 | 0.05182941257953644 |
+| targeted | budget_random | 2 | -0.017007730901241302 | -0.00982780009508133 |
 
 Images: 18; filtered: 0.
 Confidence intervals are omitted below five independent prompts.

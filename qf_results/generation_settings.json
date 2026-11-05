@@ -22,7 +22,7 @@
       ]
     ],
     "dtype": "torch.float16",
-    "device": "mps",
+    "device": "cuda",
     "attention": "default SDPA",
     "versions": {
       "torch": "2.6.0",

@@ -1,0 +1,132 @@
+{
+  "settings": {
+    "model": "CompVis/stable-diffusion-v1-4",
+    "revision": "133a221b8aa7292a167afc5127cb63fb5005638b",
+    "steps": 20,
+    "guidance_scale": 7.5,
+    "height": 512,
+    "width": 512,
+    "image_seeds": [
+      27
+    ],
+    "cases": [
+      [
+        "A black bicycle against a brick wall",
+        "a black bicycle",
+        "a brick wall"
+      ],
+      [
+        "A red apple on a plate",
+        "a plate",
+        "a red apple"
+      ]
+    ],
+    "dtype": "torch.float16",
+    "device": "mps",
+    "attention": "default SDPA",
+    "versions": {
+      "torch": "2.6.0",
+      "diffusers": "0.32.2",
+      "transformers": "4.49.0"
+    },
+    "conditions": [
+      {
+        "case_id": 0,
+        "mode": "untargeted",
+        "method": "random",
+        "attacked_prompt": "A black bicycle against a brick wall ^FF1%"
+      },
+      {
+        "case_id": 0,
+        "mode": "untargeted",
+        "method": "greedy",
+        "attacked_prompt": "A black bicycle against a brick wall FC·!U"
+      },
+      {
+        "case_id": 0,
+        "mode": "untargeted",
+        "method": "genetic",
+        "attacked_prompt": "A black bicycle against a brick wall |ZPV>"
+      },
+      {
+        "case_id": 0,
+        "mode": "untargeted",
+        "method": "budget_random",
+        "attacked_prompt": "A black bicycle against a brick wall E2|,D"
+      },
+      {
+        "case_id": 0,
+        "mode": "targeted",
+        "method": "random",
+        "attacked_prompt": "A black bicycle against a brick wall .7P<Y"
+      },
+      {
+        "case_id": 0,
+        "mode": "targeted",
+        "method": "greedy",
+        "attacked_prompt": "A black bicycle against a brick wall DJE$8"
+      },
+      {
+        "case_id": 0,
+        "mode": "targeted",
+        "method": "genetic",
+        "attacked_prompt": "A black bicycle against a brick wall 61PV'"
+      },
+      {
+        "case_id": 0,
+        "mode": "targeted",
+        "method": "budget_random",
+        "attacked_prompt": "A black bicycle against a brick wall QMT$9"
+      },
+      {
+        "case_id": 1,
+        "mode": "untargeted",
+        "method": "random",
+        "attacked_prompt": "A red apple on a plate H3X4\\"
+      },
+      {
+        "case_id": 1,
+        "mode": "untargeted",
+        "method": "greedy",
+        "attacked_prompt": "A red apple on a plate .Y1$)"
+      },
+      {
+        "case_id": 1,
+        "mode": "untargeted",
+        "method": "genetic",
+        "attacked_prompt": "A red apple on a plate CT7#S"
+      },
+      {
+        "case_id": 1,
+        "mode": "untargeted",
+        "method": "budget_random",
+        "attacked_prompt": "A red apple on a plate +|SOX"
+      },
+      {
+        "case_id": 1,
+        "mode": "targeted",
+        "method": "random",
+        "attacked_prompt": "A red apple on a plate #5)CT"
+      },
+      {
+        "case_id": 1,
+        "mode": "targeted",
+        "method": "greedy",
+        "attacked_prompt": "A red apple on a plate GP38I"
+      },
+      {
+        "case_id": 1,
+        "mode": "targeted",
+        "method": "genetic",
+        "attacked_prompt": "A red apple on a plate Y!KD8"
+      },
+      {
+        "case_id": 1,
+        "mode": "targeted",
+        "method": "budget_random",
+        "attacked_prompt": "A red apple on a plate X27QH"
+      }
+    ]
+  },
+  "initial_source_sha256": "c71c08a15644e917f8a999f0d223244f5fcbee40b1fce7dbb9b68269bd2194d3"
+}

@@ -1,0 +1,5 @@
+case_id,prompt,target,retain,mode,method,suffix,attacked_prompt,objective_cosine,full_cosine,masked_cosine,iters,batch
+0,A black bicycle against a brick wall,a black bicycle,a brick wall,untargeted,pgd,-E|7K,A black bicycle against a brick wall -E|7K,0.5886260867118835,0.5886260867118835,0.5178104639053345,100,16
+0,A black bicycle against a brick wall,a black bicycle,a brick wall,targeted,pgd,$6·Q|,A black bicycle against a brick wall $6·Q|,0.6205222606658936,0.6673557162284851,0.6205222606658936,100,16
+1,A red apple on a plate,a plate,a red apple,untargeted,pgd,·G65C,A red apple on a plate ·G65C,0.6063580513000488,0.6063580513000488,0.6027389764785767,100,16
+1,A red apple on a plate,a plate,a red apple,targeted,pgd,GXQ7|,A red apple on a plate GXQ7|,0.8303492069244385,0.8271040320396423,0.8303492069244385,100,16

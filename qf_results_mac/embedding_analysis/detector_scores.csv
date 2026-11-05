@@ -1,0 +1,19 @@
+case_id,seed,mode,method,target_query,retain_query,target_confidence,retain_confidence,target_detected,retain_detected
+0,27,clean,clean,a bicycle,a brick wall,0.726,0.1091,1,1
+0,27,untargeted,random,a bicycle,a brick wall,0.7028,0.09,1,0
+0,27,untargeted,greedy,a bicycle,a brick wall,0.802,0.1035,1,1
+0,27,untargeted,genetic,a bicycle,a brick wall,0.4555,0.0484,1,0
+0,27,untargeted,budget_random,a bicycle,a brick wall,0.2323,0.0603,1,0
+0,27,targeted,random,a bicycle,a brick wall,0.7465,0.1358,1,1
+0,27,targeted,greedy,a bicycle,a brick wall,0.6973,0.0526,1,0
+0,27,targeted,genetic,a bicycle,a brick wall,0.4831,0.0715,1,0
+0,27,targeted,budget_random,a bicycle,a brick wall,0.5321,0.1075,1,1
+1,27,clean,clean,a plate,an apple,0.3628,0.138,1,1
+1,27,untargeted,random,a plate,an apple,0.1557,0.4172,1,1
+1,27,untargeted,greedy,a plate,an apple,0.2538,0.3155,1,1
+1,27,untargeted,genetic,a plate,an apple,0.4598,0.261,1,1
+1,27,untargeted,budget_random,a plate,an apple,0.2865,0.179,1,1
+1,27,targeted,random,a plate,an apple,0.2046,0.3578,1,1
+1,27,targeted,greedy,a plate,an apple,0.3329,0.4452,1,1
+1,27,targeted,genetic,a plate,an apple,0.3304,0.0852,1,0
+1,27,targeted,budget_random,a plate,an apple,0.4551,0.2245,1,1

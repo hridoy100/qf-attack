@@ -1,9 +1,9 @@
 mode,method,images,mean_target_confidence_drop,mean_retain_confidence_drop,target_removed,target_present_in_clean
-untargeted,random,2,0.1152,-0.13,0,2
-untargeted,greedy,2,0.0165,-0.0859,0,2
-untargeted,genetic,2,0.0867,-0.0311,0,2
-untargeted,budget_random,2,0.285,0.0039,0,2
-targeted,random,2,0.0688,-0.1232,0,2
-targeted,greedy,2,0.0293,-0.1253,0,2
-targeted,genetic,2,0.1376,0.0452,0,2
-targeted,budget_random,2,0.0508,-0.0424,0,2
+untargeted,random,2,0.1098,-0.1231,0,2
+untargeted,greedy,2,0.0125,-0.08,0,2
+untargeted,genetic,2,0.063,-0.0375,0,2
+untargeted,budget_random,2,0.2339,0.0223,0,2
+targeted,random,2,0.0465,-0.1244,0,2
+targeted,greedy,2,-0.0049,-0.0953,0,2
+targeted,genetic,2,0.1297,0.0485,0,2
+targeted,budget_random,2,0.0172,-0.0371,0,2
