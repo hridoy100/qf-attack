@@ -217,6 +217,9 @@ def text_vs_image():
     fig, axes = plt.subplots(1, 2, figsize=(WIDTH, 2.55), layout="constrained")
     panels = (("untargeted", "full_cosine", "full_drop", "Full objective", "Drop in score for the original prompt"),
               ("targeted", "masked_cosine", "target_drop", "Masked objective", "Drop in score for the target"))
+    # Symmetric y-limit covering every plotted drop, so no point is clipped.
+    largest = max(abs(float(r[y_key])) for mode, _, y_key, _, _ in panels for r in metrics if r["mode"] == mode)
+    y_lim = max(0.065, np.ceil(largest * 1.1 / 0.005) * 0.005)
     for ax, (mode, x_key, y_key, title, label) in zip(axes, panels):
         rows = [r for r in metrics if r["mode"] == mode]
         x = np.array([float(r[x_key]) for r in rows])
@@ -231,9 +234,9 @@ def text_vs_image():
         ax.set_xlabel("Text cosine (further left = larger text change)")
         ax.set_ylabel(label, fontsize=8.5)
         ax.set_xlim(0.56, 0.89)
-        ax.set_ylim(-0.065, 0.065)
-        ax.text(0.885, 0.058, "image score fell", ha="right", va="center", fontsize=8.2, color=MUTED)
-        ax.text(0.885, -0.058, "image score rose", ha="right", va="center", fontsize=8.2, color=MUTED)
+        ax.set_ylim(-y_lim, y_lim)
+        ax.text(0.885, 0.89 * y_lim, "image score fell", ha="right", va="center", fontsize=8.2, color=MUTED)
+        ax.text(0.885, -0.89 * y_lim, "image score rose", ha="right", va="center", fontsize=8.2, color=MUTED)
         tidy(ax, "both")
     handles = [Line2D([], [], ls="", marker="o", mfc=NEUTRAL, mec=NEUTRAL, ms=5, label="Bicycle scene"),
                Line2D([], [], ls="", marker="o", mfc="white", mec=NEUTRAL, ms=5, label="Apple scene")]

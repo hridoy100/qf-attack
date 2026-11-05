@@ -4,7 +4,7 @@ S M Raihanul Alam | Department of Computer Science, University of Iowa | Novembe
 
 ## Abstract
 
-Zhuang et al. [1] showed that appending five characters to a prompt can change the output of Stable Diffusion, using a search that only evaluates the CLIP text encoder and never calls the diffusion model. This report reimplements their untargeted and targeted objectives with genetic, greedy and gradient-based (PGD) search and adds a random-search control matched to the genetic budget. On two prompts from the paper, the discrete searches lowered the text-embedding objective well below a single random suffix, with cosine values of 0.60 to 0.75 against 0.76 to 0.86. PGD reached the lowest untargeted cosines (0.59 and 0.61) but failed on one targeted case (0.83). The effect on images was much weaker. Mean CLIP score drops were at most 0.030, some were negative, and an independent object detector still found the target object in all eight targeted images. The genetic algorithm did not consistently beat matched random search. An analysis of the embeddings shows why the attack may not remove objects: the encoder output at the target word does not change at all, more than 99% of the mask falls on padding positions, and every suffix moves the embedding further from a target-free version of the prompt. With two prompts and one seed, these results describe this run only and do not test the paper's method ranking.
+Zhuang et al. [1] showed that appending five characters to a prompt can change the output of Stable Diffusion, using a search that only evaluates the CLIP text encoder and never calls the diffusion model. This report reimplements their untargeted and targeted objectives with genetic, greedy and gradient-based (PGD) search and adds a random-search control matched to the genetic budget. On two prompts from the paper, every search lowered the text-embedding objective below a single random suffix for the same scene and objective, with cosine values of 0.52 to 0.77 against 0.76 to 0.86. PGD gave the lowest cosines on the apple scene, but its results changed considerably between two runs with different random streams. The effect on images was much weaker. Mean CLIP score drops were at most 0.044, some were negative, and an independent object detector still found the target object in all eight targeted images. The genetic algorithm did not consistently beat matched random search. An analysis of the embeddings shows why the attack may not remove objects: the encoder output at the target word does not change at all, more than 99% of the mask falls on padding positions, and every suffix moves the embedding further from a target-free version of the prompt. With two prompts and one seed, these results describe this run only and do not test the paper's method ranking.
 
 ## 1. Introduction
 
@@ -50,7 +50,7 @@ The embedding is the final hidden state of the CLIP ViT-L/14 text encoder, flatt
 - **Greedy:** one sweep over the five positions from a random start, keeping the best of the 62 characters at each position.
 - **Genetic:** 10 generations of 20 candidates with mutation probability 0.3, two elites, 3-way tournament selection and one-point crossover.
 - **Random (budget):** uniform random search over the same number of unique candidates as the genetic run for that prompt and objective.
-- **PGD:** the gradient-based attack from the paper, following the authors' code [4]. Each of the five suffix slots holds a relaxed distribution over the 62 characters; Gumbel-softmax draws near-discrete samples, and a sign-gradient step on the relaxed logits maximises 1/cosine for 100 iterations. The final discrete suffix is scored with the same flattened-embedding cosine as the other methods, so its value is directly comparable. This ran on CPU in float32, as Gumbel-softmax and double precision are unsupported on the MPS device used for the other searches, and made no diffusion calls. It was added as a reproduction of the paper's baseline, not as a stronger attack.
+- **PGD:** the gradient-based attack from the paper, following the authors' code [4]. Each of the five suffix slots holds a relaxed distribution over the 62 characters; Gumbel-softmax draws near-discrete samples, and a sign-gradient step on the relaxed logits maximises 1/cosine for 100 iterations. The final discrete suffix is scored with the same flattened-embedding cosine as the other methods, so its value is directly comparable. This ran on the GPU in float32 and made no diffusion calls. It was added as a reproduction of the paper's baseline, not as a stronger attack.
 
 PGD operates on the text embedding only; no images were generated for its suffixes, so it appears in the text-embedding results (Table 3) but not in the image-score or detector tables.
 
@@ -58,7 +58,7 @@ PGD operates on the text embedding only; no images were generated for its suffix
 
 Two prompts from the paper's targeted examples were used. The first is "A black bicycle against a brick wall", with the bicycle as target and the wall as retained content. The second is "A red apple on a plate", with the plate as target and the apple as retained content.
 
-Images were generated at 512 × 512 with Stable Diffusion v1.4, using 20 PNDM steps and guidance scale 7.5. Each scene used one seed (27), and the same initial noise was reused for all nine conditions: the clean prompt plus four methods under each of two objectives. This gave 18 images, and the safety checker, which was left enabled, flagged none of them.
+Images were generated at 512 × 512 with Stable Diffusion v1.4 in half precision on a CUDA GPU on the University of Iowa Argon cluster, using 20 PNDM steps and guidance scale 7.5. Each scene used one seed (27), and the same initial noise was reused for all nine conditions: the clean prompt plus four methods under each of two objectives. This gave 18 images, and the safety checker, which was left enabled, flagged none of them.
 
 Table 2 lists where this run differs from the paper.
 
@@ -96,28 +96,28 @@ Table 3. Best suffix and objective cosine for each scene, objective and method. 
 | Bicycle | Full | Greedy | `FC·!U` | 0.6722 | 306 |
 | Bicycle | Full | Genetic | `\|ZPV>` | 0.6935 | 106 |
 | Bicycle | Full | Random (budget) | `E2\|,D` | 0.6901 | 106 |
-| Bicycle | Full | PGD | `-E\|7K` | 0.5886 | 100 steps |
+| Bicycle | Full | PGD | `EE!$7` | 0.7731 | 100 steps |
 | Bicycle | Masked | Random (1) | `.7P<Y` | 0.8510 | 1 |
 | Bicycle | Masked | Greedy | `DJE$8` | 0.6010 | 306 |
 | Bicycle | Masked | Genetic | `61PV'` | 0.7411 | 105 |
 | Bicycle | Masked | Random (budget) | `QMT$9` | 0.7087 | 105 |
-| Bicycle | Masked | PGD | `$6·Q\|` | 0.6205 | 100 steps |
+| Bicycle | Masked | PGD | `E4!&U` | 0.6927 | 100 steps |
 | Apple | Full | Random (1) | `H3X4\` | 0.8254 | 1 |
 | Apple | Full | Greedy | `.Y1$)` | 0.7231 | 306 |
 | Apple | Full | Genetic | `CT7#S` | 0.6591 | 103 |
 | Apple | Full | Random (budget) | `+\|SOX` | 0.7022 | 103 |
-| Apple | Full | PGD | `·G65C` | 0.6064 | 100 steps |
+| Apple | Full | PGD | `G63S\|` | 0.5154 | 100 steps |
 | Apple | Masked | Random (1) | `#5)CT` | 0.7577 | 1 |
 | Apple | Masked | Greedy | `GP38I` | 0.5953 | 306 |
 | Apple | Masked | Genetic | `Y!KD8` | 0.7107 | 94 |
 | Apple | Masked | Random (budget) | `X27QH` | 0.7457 | 94 |
-| Apple | Masked | PGD | `GXQ7\|` | 0.8303 | 100 steps |
+| Apple | Masked | PGD | `Q7\|MG` | 0.5389 | 100 steps |
 
-Every discrete search beat a single random suffix. Genetic search beat matched random search on both objectives for the apple scene, and lost on both for the bicycle scene. Greedy reached the lowest masked cosine on both scenes, but it evaluated about three times as many candidates as the genetic runs, so this is not a like-for-like comparison.
+Every search beat a single random suffix. Genetic search beat matched random search on both objectives for the apple scene, and lost on both for the bicycle scene. Among the discrete searches, greedy reached the lowest masked cosine on both scenes, but it evaluated about three times as many candidates as the genetic runs, so this is not a like-for-like comparison.
 
-PGD reached the lowest full cosine of any method on both scenes (0.5886 for the bicycle and 0.6064 for the apple), consistent with a gradient attack on the full embedding being effective on the untargeted objective. On the masked objective it was mixed: for the bicycle it placed second behind greedy (0.6205 against 0.6010), but for the apple it did worst of all methods (0.8303, above even a single random suffix), one run where the relaxed optimisation did not converge on the masked subset. This matches the paper's finding that PGD is comparable to the discrete searches rather than uniformly stronger. Its cosines are not directly comparable to the paper's Table 1 numbers, which are image CLIP scores rather than text-embedding cosines.
+PGD reached the lowest cosine of any method on both apple objectives (0.5154 full and 0.5389 masked). On the bicycle scene it placed second on the masked objective, behind greedy (0.6927 against 0.6010), and fourth on the full objective (0.7731), ahead of only the single random suffix. Its outcome also depends on the random Gumbel samples. An earlier run of the same code on a CPU, with the same seed but a different random-number stream, gave 0.5886, 0.6205, 0.6064 and 0.8303 for the four cases in table order, and PGD's rank among the five methods changed in two of the four cases. Both runs agree with the paper's finding that PGD is comparable to the discrete searches rather than uniformly stronger. Its cosines are not directly comparable to the paper's Table 1 numbers, which are image CLIP scores rather than text-embedding cosines.
 
-The masks selected 23,310 of 59,136 dimensions (39.4%) for "a black bicycle" and 19,373 (32.8%) for "a plate". The whole search used 2,117 text encodings, made no diffusion calls and took 21.2 seconds on the Apple MPS device used for this run.
+The masks selected 23,310 of 59,136 dimensions (39.4%) for "a black bicycle" and 19,373 (32.8%) for "a plate". The search with the four discrete methods used 2,117 text encodings, made no diffusion calls and took 5.3 seconds on the CUDA GPU used for this run.
 
 ### 4.2 Image scores
 
@@ -127,16 +127,16 @@ Table 4. Mean paired drop in CLIP score over the two scenes. Retained drop is th
 
 | Objective | Method | Mean drop | Retained drop |
 |---|---|---|---|
-| Untargeted | Random (1) | +0.0029 | +0.0102 |
-| Untargeted | Greedy | −0.0224 | −0.0073 |
-| Untargeted | Genetic | −0.0277 | +0.0084 |
-| Untargeted | Random (budget) | +0.0296 | +0.0198 |
-| Targeted | Random (1) | −0.0122 | −0.0064 |
-| Targeted | Greedy | −0.0033 | +0.0118 |
-| Targeted | Genetic | +0.0120 | +0.0516 |
-| Targeted | Random (budget) | −0.0144 | −0.0073 |
+| Untargeted | Random (1) | +0.0002 | +0.0091 |
+| Untargeted | Greedy | −0.0240 | −0.0078 |
+| Untargeted | Genetic | −0.0345 | +0.0059 |
+| Untargeted | Random (budget) | +0.0438 | +0.0223 |
+| Targeted | Random (1) | −0.0151 | −0.0061 |
+| Targeted | Greedy | −0.0041 | +0.0094 |
+| Targeted | Genetic | +0.0093 | +0.0518 |
+| Targeted | Random (budget) | −0.0170 | −0.0098 |
 
-Untargeted genetic search raised alignment with the original prompt on average, and the largest untargeted drop came from matched random search. Targeted genetic search was the only targeted method with a positive target drop, but its retained content dropped by more. Most of that retained drop came from the bicycle scene, where the wall score fell by 0.1014 while the target score fell by only 0.0145. The lowest text cosine also did not produce the largest image effect: targeted greedy had the lowest masked cosine on both scenes, yet its mean target drop was slightly negative.
+Untargeted genetic search raised alignment with the original prompt on average, and the largest untargeted drop came from matched random search. Targeted genetic search was the only targeted method with a positive target drop, but its retained content dropped by more. Most of that retained drop came from the bicycle scene, where the wall score fell by 0.1045 while the target score fell by only 0.0113. The lowest text cosine also did not produce the largest image effect: among the methods with generated images, targeted greedy had the lowest masked cosine on both scenes, yet its mean target drop was slightly negative.
 
 ### 4.3 Visual inspection
 
@@ -150,7 +150,7 @@ The suffixes clearly change composition and style. Several bicycle images shift 
 
 ### 4.4 Embedding analysis
 
-**Where the change happens.** Figure 3 follows the Greedy masked suffix through the encoder, one token at a time. Each position in CLIP's text encoder can only see earlier tokens, so a suffix cannot affect anything before it. The measurements confirm this: across all 16 suffixes, the largest change at any position before the suffix is 0.00004, against distances of about 12 to 37 from the suffix onwards. The tokens "bicycle" and "plate" therefore reach the diffusion model unchanged.
+**Where the change happens.** Figure 3 follows the Greedy masked suffix through the encoder, one token at a time. Each position in CLIP's text encoder can only see earlier tokens, so a suffix cannot affect anything before it. The measurements confirm this: across all 16 suffixes, the largest change at any position before the suffix is 0.00003, against distances of about 12 to 37 from the suffix onwards. The tokens "bicycle" and "plate" therefore reach the diffusion model unchanged.
 
 Most of the change falls on padding, which fills the remaining 63 to 66 of the 77 positions. Across the 16 suffixes, padding holds 72.2% to 92.7% of the squared change. It also holds about 87% of the squared norm of the clean embedding (86.8% and 87.9%), so the objective largely measures change in padding.
 
@@ -167,21 +167,21 @@ Table 5. Targeted-attack examples with measured values. Cosine to target-free co
 | Scene | Method | Suffix | Tokens | Masked cos. | Full cos. | Cos. to target-free | Padding share | Target drop | Retained drop |
 |---|---|---|---|---|---|---|---|---|---|
 | Bicycle | Clean | none | 0 | 1.0000 | 1.0000 | 0.6360 | n/a | n/a | n/a |
-| Bicycle | Random (1) | `.7P<Y` | 5 | 0.8510 | 0.8608 | 0.5009 | 72.2% | −0.0036 | +0.0101 |
-| Bicycle | Greedy | `DJE$8` | 4 | 0.6010 | 0.6616 | 0.3988 | 87.7% | +0.0177 | +0.0434 |
-| Bicycle | Genetic | `61PV'` | 4 | 0.7411 | 0.7684 | 0.4805 | 85.8% | +0.0145 | +0.1014 |
-| Bicycle | Random (budget) | `QMT$9` | 4 | 0.7087 | 0.7550 | 0.4479 | 87.1% | −0.0062 | +0.0190 |
+| Bicycle | Random (1) | `.7P<Y` | 5 | 0.8510 | 0.8608 | 0.5009 | 72.2% | −0.0060 | +0.0107 |
+| Bicycle | Greedy | `DJE$8` | 4 | 0.6010 | 0.6615 | 0.3988 | 87.7% | +0.0141 | +0.0377 |
+| Bicycle | Genetic | `61PV'` | 4 | 0.7411 | 0.7684 | 0.4805 | 85.8% | +0.0113 | +0.1045 |
+| Bicycle | Random (budget) | `QMT$9` | 4 | 0.7087 | 0.7550 | 0.4479 | 87.1% | −0.0079 | +0.0167 |
 | Apple | Clean | none | 0 | 1.0000 | 1.0000 | 0.7470 | n/a | n/a | n/a |
-| Apple | Random (1) | `#5)CT` | 4 | 0.7577 | 0.7642 | 0.6218 | 87.9% | −0.0208 | −0.0229 |
-| Apple | Greedy | `GP38I` | 4 | 0.5953 | 0.6095 | 0.5168 | 89.1% | −0.0243 | −0.0198 |
-| Apple | Genetic | `Y!KD8` | 4 | 0.7107 | 0.7160 | 0.5421 | 87.4% | +0.0095 | +0.0019 |
-| Apple | Random (budget) | `X27QH` | 5 | 0.7457 | 0.7395 | 0.5572 | 82.3% | −0.0226 | −0.0336 |
+| Apple | Random (1) | `#5)CT` | 4 | 0.7577 | 0.7642 | 0.6218 | 87.9% | −0.0241 | −0.0229 |
+| Apple | Greedy | `GP38I` | 4 | 0.5953 | 0.6095 | 0.5168 | 89.1% | −0.0223 | −0.0189 |
+| Apple | Genetic | `Y!KD8` | 4 | 0.7107 | 0.7160 | 0.5421 | 87.4% | +0.0073 | −0.0008 |
+| Apple | Random (budget) | `X27QH` | 5 | 0.7457 | 0.7395 | 0.5572 | 82.3% | −0.0261 | −0.0363 |
 
-**How the searches compare with random suffixes.** Figure 5 compares each way of choosing a suffix. The mean full cosine for a random suffix is 0.8647 on the bicycle scene and 0.8493 on the apple scene, and the searches all reach well below the typical range. Random sampling also gets there when given more attempts, since the best of 500 suffixes is lower than every searched suffix on the apple scene. That sample is larger than any search budget (94 to 306).
+**How the searches compare with random suffixes.** Figure 5 compares each way of choosing a suffix. The mean full cosine for a random suffix is 0.8647 on the bicycle scene and 0.8493 on the apple scene, and the searches all reach well below the typical range. Random sampling also gets there when given more attempts, since on the apple scene the best of 500 suffixes is lower than every suffix from the discrete searches, though not lower than PGD's (0.5154 and 0.5389). That sample is larger than any search budget (94 to 306).
 
 ![Figure 5. Objective cosine for each way of choosing a suffix, with the number of suffixes tried. Compare each point with the band of the same colour, since the full and masked objectives use different dimensions.](qf_results/embedding_analysis/fig_searches_vs_random.png)
 
-**Whether text change predicts image change.** Figure 6 plots the text cosine against the image score drop for all 16 suffixes. If a larger text change produced a larger image effect, the points would slope down from upper left to lower right, giving a clearly negative rank correlation. The values are +0.19 for the full objective and −0.02 for the masked objective. With eight suffixes in each panel, this is only descriptive.
+**Whether text change predicts image change.** Figure 6 plots the text cosine against the image score drop for all 16 suffixes. If a larger text change produced a larger image effect, the points would slope down from upper left to lower right, giving a clearly negative rank correlation. The values are +0.07 for the full objective and −0.29 for the masked objective. Only the masked value points in the expected direction, and it is weak. With eight suffixes in each panel, this is only descriptive.
 
 ![Figure 6. Text cosine against image score drop for each suffix, using the scores from Table 4.](qf_results/embedding_analysis/fig_text_vs_image.png)
 
@@ -189,7 +189,7 @@ Table 5. Targeted-attack examples with measured values. Cosine to target-free co
 
 The observations above and the CLIP scores both rely on CLIP, which is also the model under attack. As a separate check, the 18 images were scored with OWL-ViT, an open-vocabulary object detector [5], which was not used anywhere in the attack. For each image the detector reported its confidence that the target object and the retained object are present. A detection threshold of 0.10 was fixed in advance.
 
-The detector found the target object in every image. In the two clean images its confidence is 0.726 for the bicycle and 0.363 for the plate, and in all eight targeted attacks, and all eight untargeted ones, the target stayed above the threshold. No attack removed either object. Figure 7 shows the confidences, and Table 6 gives the mean change from the clean image.
+The detector found the target object in every image. In the two clean images its confidence is 0.686 for the bicycle and 0.361 for the plate, and in all eight targeted attacks, and all eight untargeted ones, the target stayed above the threshold. No attack removed either object. Figure 7 shows the confidences, and Table 6 gives the mean change from the clean image.
 
 ![Figure 7. Detector confidence for the target object (circles) and the retained object (crosses) in each image. Points to the right of the dashed line are counted as detected. Every target circle is to the right of it.](qf_results/embedding_analysis/fig_detector.png)
 
@@ -197,16 +197,16 @@ Table 6. Change in the detector's target confidence relative to the clean image,
 
 | Objective | Method | Mean target confidence drop | Targets removed |
 |---|---|---|---|
-| Untargeted | Random (1) | +0.1152 | 0 of 2 |
-| Untargeted | Greedy | +0.0165 | 0 of 2 |
-| Untargeted | Genetic | +0.0867 | 0 of 2 |
-| Untargeted | Random (budget) | +0.2850 | 0 of 2 |
-| Targeted | Random (1) | +0.0688 | 0 of 2 |
-| Targeted | Greedy | +0.0293 | 0 of 2 |
-| Targeted | Genetic | +0.1376 | 0 of 2 |
-| Targeted | Random (budget) | +0.0508 | 0 of 2 |
+| Untargeted | Random (1) | +0.1098 | 0 of 2 |
+| Untargeted | Greedy | +0.0125 | 0 of 2 |
+| Untargeted | Genetic | +0.0630 | 0 of 2 |
+| Untargeted | Random (budget) | +0.2339 | 0 of 2 |
+| Targeted | Random (1) | +0.0465 | 0 of 2 |
+| Targeted | Greedy | −0.0049 | 0 of 2 |
+| Targeted | Genetic | +0.1297 | 0 of 2 |
+| Targeted | Random (budget) | +0.0172 | 0 of 2 |
 
-The confidence drops are small and, for several methods, the detector was actually more confident after the attack. These per-image numbers depend on the 0.10 threshold and on two scenes with one seed, so the robust result is the binary one: the target object survived every attack. OWL-ViT has a CLIP-based image backbone, so it is more independent of the evaluator than re-using the same CLIP model but not fully independent. The retained-object confidences are low even in the clean apple image (0.138), so the crosses in Figure 7 should be read only as a rough guide.
+The confidence drops are mostly small and, in several images, the detector was actually more confident after the attack. These per-image numbers depend on the 0.10 threshold and on two scenes with one seed, so the robust result is the binary one: the target object survived every attack. OWL-ViT has a CLIP-based image backbone, so it is more independent of the evaluator than re-using the same CLIP model but not fully independent. The retained-object confidences are low even in the clean apple image (0.137), so the crosses in Figure 7 should be read only as a rough guide.
 
 ## 5. Discussion
 
@@ -216,7 +216,7 @@ The first claim is partly supported. Short suffixes substantially reduced the te
 
 The second claim was not reproduced. The paper shows the bicycle and plate being removed from these same prompts [1, Fig. 4], whereas neither was removed in this run. This run is too limited to contradict the paper, since it used fewer generations, fewer sampling steps, one seed and different mask sentences. The independent detector in Section 4.5 agrees with the visual inspection that neither object was removed, which does not depend on the CLIP evaluator. It does show that targeted removal is not guaranteed by minimizing the masked objective.
 
-The matched control suggests that the comparison between optimizers needs care. On these prompts, random search with the same budget was competitive with a 10-generation genetic algorithm. The gradient baseline (PGD) reached the lowest full-objective cosine of any method but did not uniformly beat the discrete searches on the masked objective, which agrees with the paper's own finding that PGD is comparable to rather than stronger than genetic search. Applying the same controls across the full 20-prompt setting would show whether the paper's ranking comes from the search strategy or the number of evaluations.
+The matched control suggests that the comparison between optimizers needs care. On these prompts, random search with the same budget was competitive with a 10-generation genetic algorithm. The gradient baseline (PGD) gave the lowest cosine on both apple objectives but not on the bicycle scene, and its results changed considerably between two runs with different random streams. This agrees with the paper's own finding that PGD is comparable to rather than stronger than genetic search, and it shows that a single PGD run per case is not enough to rank it. Applying the same controls across the full 20-prompt setting would show whether the paper's ranking comes from the search strategy or the number of evaluations.
 
 The embedding analysis suggests an explanation for the failed removal, which this run does not test directly. The target token's embedding is identical before and after the attack, so the diffusion model's cross-attention still receives it. The mask selects almost only padding positions, and the search moves the embedding away from the target-free prompt as well as from the clean prompt. Testing this would require measuring image outcomes after directly changing the target token's embedding or the padding embeddings. The authors' code flattens the embedding in the same way, so the same concentration on padding may apply to the original experiments, but this was only measured on the two prompts here.
 
@@ -229,7 +229,7 @@ These results have several limitations.
 - The CLIP score drops and the attack both rely on CLIP, so a score drop may partly reflect CLIP's sensitivity to the suffix. The object detector in Section 4.5 is more independent, but it still has a CLIP-based backbone and its confidence depends on the chosen threshold.
 - The masks depend on the chosen sentences, and with about a third of all dimensions selected they were not especially selective.
 - The cosine to a target-free prompt uses one reference prompt per scene and is itself dominated by padding positions.
-- The notebook was run only on a local Apple MPS machine with half-precision weights, and has not been executed on hosted Google Colab.
+- The measured run used one CUDA GPU with half-precision weights. An earlier run on Apple MPS found the same discrete-search suffixes, but its images differed slightly, its mean image score drops differed by up to 0.014, and its PGD suffixes were different. The notebook has not been executed on hosted Google Colab.
 
 The object detector in Section 4.5 is one such independent measure. Blinded human labels, or a detector with no shared backbone, would strengthen it further, especially for the retained content.
 
@@ -251,7 +251,7 @@ This reproduction confirms that five-character suffixes can lower the CLIP text-
 
 ## Appendix: Software and models
 
-Python 3.12.14, torch 2.6.0, transformers 4.49.0, diffusers 0.32.2, accelerate 1.4.0, huggingface-hub 0.28.1, numpy 2.3.5. Search seed 2026.
+Python 3.10.8, torch 2.6.0, transformers 4.49.0, diffusers 0.32.2, accelerate 1.4.0, huggingface-hub 0.28.1, numpy 2.0.2, on a CUDA GPU on the University of Iowa Argon cluster (Linux). Search seed 2026.
 
 Object detection used OWL-ViT (google/owlvit-base-patch32).
 
