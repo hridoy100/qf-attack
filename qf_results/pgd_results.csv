@@ -1,5 +1,5 @@
-case_id,prompt,target,retain,mode,method,suffix,attacked_prompt,objective_cosine,full_cosine,masked_cosine,iters,batch
-0,A black bicycle against a brick wall,a black bicycle,a brick wall,untargeted,pgd,EE!$7,A black bicycle against a brick wall EE!$7,0.7730798125267029,0.7730798125267029,0.7674164772033691,100,16
-0,A black bicycle against a brick wall,a black bicycle,a brick wall,targeted,pgd,E4!&U,A black bicycle against a brick wall E4!&U,0.6927194595336914,0.7225679159164429,0.6927194595336914,100,16
-1,A red apple on a plate,a plate,a red apple,untargeted,pgd,G63S|,A red apple on a plate G63S|,0.5153837203979492,0.5153837203979492,0.478452205657959,100,16
-1,A red apple on a plate,a plate,a red apple,targeted,pgd,Q7|MG,A red apple on a plate Q7|MG,0.5388822555541992,0.5548319816589355,0.5388822555541992,100,16
+case_id,prompt,mode,method,suffix,objective_cosine,full_cosine,masked_cosine,iters,batch
+0,A black bicycle against a brick wall,untargeted,pgd,EE!$7,0.7730798125267029,0.7730798125267029,0.7674164772033691,100,16
+0,A black bicycle against a brick wall,targeted,pgd,E4!&U,0.6927194595336914,0.7225679159164429,0.6927194595336914,100,16
+1,A red apple on a plate,untargeted,pgd,G63S|,0.5153837203979492,0.5153837203979492,0.478452205657959,100,16
+1,A red apple on a plate,targeted,pgd,Q7|MG,0.5388822555541992,0.5548319816589355,0.5388822555541992,100,16

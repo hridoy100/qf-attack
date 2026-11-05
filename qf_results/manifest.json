@@ -41,7 +41,7 @@
   ],
   "total_texts_encoded": 2117,
   "total_forward_batches": 336,
-  "elapsed_seconds": 5.3026750246062875,
+  "elapsed_seconds": 5.247003972530365,
   "diffusion_queries_during_search": 0,
   "images_evaluated": true,
   "alphabet": "·~!@#$%^&*()=-+.<>?,';:|\\/ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",

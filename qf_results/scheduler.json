@@ -10,8 +10,8 @@
   "timestep_spacing": "leading",
   "steps_offset": 1,
   "_use_default_values": [
-    "timestep_spacing",
-    "prediction_type"
+    "prediction_type",
+    "timestep_spacing"
   ],
   "_class_name": "PNDMScheduler",
   "_diffusers_version": "0.7.0.dev0",
