@@ -168,7 +168,7 @@ Table 5. Targeted-attack examples with measured values. Cosine to target-free co
 |---|---|---|---|---|---|---|---|---|---|
 | Bicycle | Clean | none | 0 | 1.0000 | 1.0000 | 0.6360 | n/a | n/a | n/a |
 | Bicycle | Random (1) | `.7P<Y` | 5 | 0.8510 | 0.8608 | 0.5009 | 72.2% | −0.0060 | +0.0107 |
-| Bicycle | Greedy | `DJE$8` | 4 | 0.6010 | 0.6615 | 0.3988 | 87.7% | +0.0141 | +0.0377 |
+| Bicycle | Greedy | `DJE$8` | 4 | 0.6010 | 0.6616 | 0.3988 | 87.7% | +0.0141 | +0.0377 |
 | Bicycle | Genetic | `61PV'` | 4 | 0.7411 | 0.7684 | 0.4805 | 85.8% | +0.0113 | +0.1045 |
 | Bicycle | Random (budget) | `QMT$9` | 4 | 0.7087 | 0.7550 | 0.4479 | 87.1% | −0.0079 | +0.0167 |
 | Apple | Clean | none | 0 | 1.0000 | 1.0000 | 0.7470 | n/a | n/a | n/a |
