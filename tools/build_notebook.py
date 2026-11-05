@@ -35,7 +35,8 @@ is called **after search**, with identical initial noise across clean/attacked c
 The model's default safety checker remains enabled; filtered outputs are logged and excluded in pairs.
 
 **Scope:** equations (1)-(2), genetic and coordinate-greedy search, one-sample random,
-and a genetic-budget-matched random control. PGD is not reproduced. The fixed
+a genetic-budget-matched random control, and a gradient-based PGD baseline
+(encoder-only; no images are generated for its suffixes). The fixed
 contexts, operator choices and extended dataset are declared deviations from the paper.
 The saved outputs are actual run measurements, never copies of the paper's scores.
 """)
@@ -128,6 +129,106 @@ fig.tight_layout()
 fig.savefig(Path(cfg.output_dir) / "encoder_objectives.png", dpi=180)
 plt.show()
 ''')
+md(r"""## PGD: gradient-based baseline (encoder-only)
+
+The paper also reports a gradient attack (PGD). Each of the five suffix slots holds
+a relaxed distribution over the alphabet; Gumbel-softmax draws near-discrete samples
+and a sign-gradient step maximizes $1/\cos$ for 100 iterations. The final discrete
+suffix is scored with the same flattened-embedding cosine as the other methods, so
+it is directly comparable to the Table above. This is a reproduction of a published
+baseline, not a stronger attack. No diffusion model is involved and no images are
+generated for PGD suffixes. It runs on the GPU when available, falling back to CPU
+on Apple MPS, where Gumbel-softmax is unsupported.
+""")
+code('''# 5b. PGD (gradient-based) attack on the text embedding. Encoder-only; no images.
+import dataclasses
+import numpy as np
+import torch
+import torch.nn.functional as F
+from transformers.modeling_attn_mask_utils import _create_4d_causal_attention_mask
+
+PGD_ITERS, PGD_BATCH, PGD_ETA, PGD_SEED = 100, 16, 1.0, SEED
+_dev = qf.choose_device(cfg.device)
+pgd_device = "cpu" if _dev.type == "mps" else str(_dev)  # Gumbel-softmax unsupported on MPS
+pgd_cfg = dataclasses.replace(cfg, device=pgd_device)
+pgd_oracle = qf.TextOracle(pgd_cfg)
+_tm = pgd_oracle.model.text_model
+_A = qf.ALPHABET
+
+def _tok_pos(text):
+    ids = pgd_oracle.tokenizer(text, padding="max_length", truncation=True,
+                               max_length=77, return_tensors="pt").input_ids.to(pgd_device)
+    with torch.no_grad():
+        return _tm.embeddings(input_ids=ids)
+
+def _forward(embeds):
+    m = _create_4d_causal_attention_mask((1, embeds.shape[1]), embeds.dtype, device=embeds.device)
+    out = _tm.encoder(inputs_embeds=embeds, causal_attention_mask=m)[0]
+    return _tm.final_layer_norm(out)
+
+def _candidate_embeds():
+    rows = [_tok_pos((ch + " ") * 75)[0] for ch in _A]  # [77, dim] per character
+    return torch.stack(rows, dim=1)                     # [77, C, dim]
+
+def _run_pgd(prompt, mask, length, iters, batch, eta, seed):
+    torch.manual_seed(seed)
+    candidate = _candidate_embeds().to(pgd_device)
+    orig = _tok_pos(prompt)
+    with torch.no_grad():
+        clean_out = _forward(orig).flatten()
+    mask_vec = mask.to(pgd_device) if mask is not None else torch.ones_like(clean_out)
+    clean_ref = F.normalize(clean_out * mask_vec, dim=0)
+    num_word = len(prompt.split(" "))
+    z = torch.zeros(77, 1, device=pgd_device)
+    z[num_word + 1:num_word + length + 1] = 1.0
+    u = torch.full((77, len(_A)), 1.0 / len(_A), device=pgd_device, requires_grad=True)
+    base = orig[0]
+    def embed_from(onehot):
+        picked = torch.einsum("pc,pcd->pd", onehot, candidate)
+        return ((1 - z) * base + z * picked).unsqueeze(0)
+    def masked_cos(out):
+        v = F.normalize(out.flatten() * mask_vec, dim=0)
+        return torch.dot(v, clean_ref)
+    def suffix_of(sample):
+        idx = sample[num_word + 1:num_word + length + 1].argmax(dim=1)
+        return "".join(_A[i] for i in idx.tolist())
+    best_suffix, best_loss = None, -float("inf")
+    lr = eta / np.sqrt(iters)
+    for _ in range(iters):
+        samples = [F.gumbel_softmax(u, tau=0.5, hard=True, dim=-1) for _ in range(batch)]
+        losses = [1.0 / masked_cos(_forward(embed_from(s))) for s in samples]
+        ranked = sorted(zip(losses, samples), key=lambda x: x[0].item(), reverse=True)
+        if ranked[0][0].item() > best_loss:
+            best_loss = ranked[0][0].item()
+            best_suffix = suffix_of(ranked[0][1].detach())
+        total = sum(loss for loss, _ in ranked[:5])
+        if u.grad is not None:
+            u.grad.zero_()
+        total.backward()
+        with torch.no_grad():
+            u += lr * torch.sign(u.grad)
+    return best_suffix
+
+pgd_rows = []
+for case_id, (prompt, target, retain) in enumerate(qf.CASES[:cfg.n_prompts]):
+    mask = torch.from_numpy(np.load(Path(cfg.output_dir) / f"mask_{case_id:02d}.npy")).float()
+    reference = pgd_oracle.encode([prompt]).flatten()
+    for mode in ("untargeted", "targeted"):
+        mode_mask = None if mode == "untargeted" else mask
+        suffix = _run_pgd(prompt, mode_mask, cfg.suffix_length, PGD_ITERS, PGD_BATCH, PGD_ETA,
+                          PGD_SEED + 1000 * case_id + (mode == "targeted"))
+        h = pgd_oracle.encode([prompt + " " + suffix]).flatten()
+        full = float(F.cosine_similarity(reference, h, dim=0))
+        masked = float(F.cosine_similarity(reference * mask, h * mask, dim=0))
+        pgd_rows.append(dict(case_id=case_id, prompt=prompt, mode=mode, method="pgd", suffix=suffix,
+                             objective_cosine=masked if mode == "targeted" else full,
+                             full_cosine=full, masked_cosine=masked, iters=PGD_ITERS, batch=PGD_BATCH))
+        print(f"{case_id} {mode:10s} pgd {suffix!r} full={full:.4f} masked={masked:.4f}", flush=True)
+
+pgd_df = pd.DataFrame(pgd_rows)
+pgd_df.to_csv(Path(cfg.output_dir) / "pgd_results.csv", index=False)
+display(pgd_df[["case_id", "mode", "suffix", "objective_cosine", "full_cosine", "masked_cosine"]])
+''')
 md("""## Paired image generation and evaluation
 
 Every clean/attack condition for a scene and seed receives a clone of the **same
@@ -171,6 +272,7 @@ md("""## Read the outputs
 
 - `run_report.md`: actual results and execution status for this run.
 - `attack_results.csv`: suffixes, both cosine diagnostics, budgets, timings and seeds.
+- `pgd_results.csv`: gradient-based PGD suffixes and their text-embedding cosines.
 - `search_traces.json`: convergence histories and scored candidates.
 - `mask_*.npy`, `mask_statistics.json`: targeted masks and selected-coordinate ratios.
 - `manifest.json`: model commits, software versions, dataset, device and code hash.
@@ -186,7 +288,9 @@ family, so an independent evaluator is a useful follow-up.
 
 Paper Table 1 reports untargeted genetic mean 0.203 vs. clean 0.277 and targeted
 genetic mean 0.186 vs. clean 0.229. These are **published reference values**, not
-expected outputs or measurements from this notebook. PGD is outside this implementation.
+expected outputs or measurements from this notebook. The PGD cell above reproduces
+the paper's gradient baseline at the encoder level only; its cosines are not directly
+comparable to Table 1, which reports image CLIP scores.
 """)
 
 optimization_path = ROOT / "Attack_Optimization.md"
