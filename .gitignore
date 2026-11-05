@@ -15,6 +15,17 @@ tmp/
 .idea/
 .vscode/
 
+# Run logs (e.g. nohup output)
+*.log
+
 # Redundant archives and bundles (regenerated on demand)
 *.zip
 QF Adv.pdf
+
+# Extended run: track only the CSV results and the manifest, not images, grids,
+# masks, traces or generation sources. Directories are re-included so git can
+# reach the CSVs inside them.
+qf_results_extended/**
+!qf_results_extended/**/
+!qf_results_extended/**/*.csv
+!qf_results_extended/manifest.json

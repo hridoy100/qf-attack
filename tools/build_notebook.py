@@ -251,10 +251,15 @@ else:
     print("Text-only run: image generation and image CLIP scores were not measured.")
 ''')
 code('''# 7. Inspect paired image grids, including random controls.
+# Displayed images are stored inside the notebook file, so show only a few;
+# the extended profile writes one grid per prompt and seed (200 in total).
 from IPython.display import Image, Markdown, display
-for path in sorted(Path(cfg.output_dir).glob("grid_*.png")):
+MAX_GRIDS = 4
+grids = sorted(Path(cfg.output_dir).glob("grid_*.png"))
+for path in grids[:MAX_GRIDS]:
     display(Markdown("**" + path.name + "**"))
     display(Image(filename=str(path)))
+print(f"Showing {min(len(grids), MAX_GRIDS)} of {len(grids)} grids; all are saved in {cfg.output_dir}/.")
 ''')
 md("""## Report analysis: embedding, detector and figures
 
