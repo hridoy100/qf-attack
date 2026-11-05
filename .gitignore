@@ -14,3 +14,7 @@ tmp/
 .DS_Store
 .idea/
 .vscode/
+
+# Redundant archives and bundles (regenerated on demand)
+*.zip
+QF Adv.pdf
