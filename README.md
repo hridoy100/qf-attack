@@ -7,8 +7,8 @@ Open `QF_Attack_Colab.ipynb` by uploading it at [Google Colab](https://colab.res
 Select **Runtime > Change runtime type > T4 GPU** and **Runtime Version 2026.07
 (Python 3.12)**, then run the cells in order. See [Google's runtime-version
 instructions](https://research.google.com/colaboratory/runtime-version-faq.html).
-The notebook contains its own implementation and does not require any other
-workspace file. Use a fresh runtime for dependency installation; restart if Colab
+The notebook loads `qf_attack.py` and `tools/` from the repository, cloning it
+if only the notebook was uploaded. Use a fresh runtime for dependency installation; restart if Colab
 requests it. The image models require several GB of downloads.
 
 The default demo runs two scenes, both targeted and untargeted objectives,
@@ -62,8 +62,9 @@ target removal from CLIP score alone.
 Files:
 
 - `QF_Attack_Report.md`, `QF_Attack_Report.tex`, `output/pdf/QF_Attack_Report.pdf`: the report.
-- `QF_Attack_Colab.ipynb`: clean, self-contained notebook for Colab. It runs the search, PGD,
-  image generation, and (for `demo`) the report's embedding analysis, OWL-ViT detector check and figures.
+- `QF_Attack_Colab.ipynb`: notebook that runs the search, PGD, image generation, and (for `demo`)
+  the report's embedding analysis, OWL-ViT detector check and figures. It uses `qf_attack.py` and
+  `tools/` from the repository; uploaded alone to Colab, it clones the repository first.
 - `QF_Attack_Executed.ipynb`: the same notebook with local text-only execution outputs.
 - `QF_Attack_Analysis.md`, `output/pdf/QF_Attack_Analysis.pdf`: earlier analysis report.
 - `Attack_Optimization.md`: proposed improvements (not implemented or tested); also appended to the notebook.

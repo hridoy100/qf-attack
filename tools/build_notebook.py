@@ -25,8 +25,10 @@ An independent research implementation of **Zhuang, Zhang and Liu (2023)**,
 **Runtime > Change runtime type > T4 GPU**, and set **Runtime Version to 2026.07**
 (Python 3.12), then run the cells in order. The pinned installation targets Python 3.12.
 [Google's runtime-version instructions](https://research.google.com/colaboratory/runtime-version-faq.html).
-Model weights require several GB of disk space. This notebook is self-contained;
-you do not need to upload `qf_attack.py` or the PDF. Keep a fresh runtime for package installation.
+Model weights require several GB of disk space. The code lives in the repository's
+`qf_attack.py` and `tools/`: run the notebook from a checkout of
+[the repository](https://github.com/hridoy100/qf-attack), or upload only this `.ipynb`
+and cell 2 clones the repository. Keep a fresh runtime for package installation.
 If Colab requests a restart after installation, restart and continue from cell 2.
 
 The default experiment attacks two benign scenes using a five-character suffix
@@ -72,16 +74,28 @@ CLIP's projected, normalized pooled vectors, a different representation.
 This objective does not enforce background preservation or even a direction of
 concept removal. Evaluate target and retained concepts separately and inspect images.
 """)
-code("# 2. Write the standalone implementation (no GitHub clone required).\nfrom pathlib import Path\n" +
-     "Path('qf_attack.py').write_text(" + repr((ROOT / "qf_attack.py").read_text()) + ", encoding='utf-8')\n" +
-     "import warnings\n"
-     "# Without ipywidgets, tqdm warns and falls back to text progress bars; that is fine here.\n"
-     "warnings.filterwarnings('ignore', message='IProgress not found')\n"
-     "import qf_attack as qf\nprint('Implementation loaded; alphabet size:', len(qf.ALPHABET))\n")
+code('''# 2. Load the implementation (qf_attack.py) and analysis scripts (tools/) from the repository.
+import os, warnings
+from pathlib import Path
+REPO_URL = "https://github.com/hridoy100/qf-attack.git"
+if not Path("qf_attack.py").exists():
+    # Only the notebook is here (for example, uploaded to Colab): fetch the code.
+    if not Path("qf-attack/qf_attack.py").exists():
+        subprocess.run(["git", "clone", "--depth", "1", REPO_URL, "qf-attack"], check=True)
+    os.chdir("qf-attack")
+sys.path.insert(0, str(Path.cwd()))
+print("Working directory:", Path.cwd())
+# Without ipywidgets, tqdm warns and falls back to text progress bars; that is fine here.
+warnings.filterwarnings("ignore", message="IProgress not found")
+import qf_attack as qf
+print("Implementation loaded; alphabet size:", len(qf.ALPHABET))
+''')
 code('''# 3. Experiment settings. The environment override is only for local verification.
 import os
 PROFILE = "demo"  # @param ["demo", "extended"]
 RUN_IMAGES = True  # @param {type:"boolean"}
+# qf_results/ in the repository holds the committed run. For a fresh run, use a new name:
+# the same folder reuses its existing images, or stops if the image settings differ.
 OUTPUT_DIR = "qf_results"  # @param {type:"string"}
 SEED = 2026  # @param {type:"integer"}
 
@@ -262,10 +276,10 @@ for path in sorted(Path(cfg.output_dir).glob("grid_*.png")):
     display(Markdown("**" + path.name + "**"))
     display(Image(filename=str(path)))
 ''')
-ANALYSIS_TOOLS = ("embedding_analysis.py", "detector_scoring.py", "plot_embeddings.py", "plot_detector.py")
 md("""## Report analysis: embedding, detector and figures
 
-These cells reproduce the analysis and Figures 1-7 of the accompanying report.
+This cell runs the repository's `tools/` scripts to reproduce the analysis and
+Figures 1-7 of the accompanying report.
 The **embedding analysis** re-encodes every recorded suffix, checks that it
 reproduces the recorded cosines, and measures where the change falls (token
 positions, padding, the targeted mask) and how the suffixes compare with 500
@@ -278,12 +292,7 @@ The scripts are written for the `demo` profile's two scenes and image seed 27,
 so they are skipped for `extended`. In a text-only run the detector and the
 two image-dependent figures are skipped. Outputs go to `<output dir>/embedding_analysis/`.
 """)
-code("# 7b. Write the report-analysis scripts (same files as the repository's tools/).\n" +
-     "Path('tools').mkdir(exist_ok=True)\n" +
-     "".join(f"Path('tools/{name}').write_text({(ROOT / 'tools' / name).read_text()!r}, encoding='utf-8')\n"
-             for name in ANALYSIS_TOOLS) +
-     "print('Wrote', ', '.join(" + repr(list(ANALYSIS_TOOLS)) + "))\n")
-code('''# 7c. Run the embedding analysis, the OWL-ViT detector check and the report figures.
+code('''# 7b. Run the embedding analysis, the OWL-ViT detector check and the report figures (tools/).
 import subprocess
 
 def run_tool(name):
