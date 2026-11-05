@@ -28,8 +28,9 @@ exceed a free Colab session.
 
 Run the image stage on a GPU node; the search, PGD, analysis, detector and
 report steps are CPU-only. The models (~5 GB) are downloaded from Hugging Face,
-so either allow network access on the node or copy a local `.hf-cache/` over and
-export `HF_HOME=$PWD/.hf-cache HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1`.
+so the node needs network access. Do not set `HF_HUB_OFFLINE`: the run resolves
+each model's exact commit through the Hugging Face API, which fails in offline
+mode even when the models are cached.
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
