@@ -12,7 +12,6 @@ import random
 
 ROOT = Path(__file__).resolve().parents[1]
 os.environ.setdefault("HF_HOME", str(ROOT / ".hf-cache"))
-os.environ.setdefault("HF_HUB_OFFLINE", "1")
 
 import numpy as np
 import torch

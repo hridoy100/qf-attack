@@ -20,14 +20,13 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 os.environ.setdefault("HF_HOME", str(ROOT / ".hf-cache"))
-os.environ.setdefault("HF_HUB_OFFLINE", "1")
 sys.path.insert(0, str(ROOT))
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 
-from qf_attack import ALPHABET, CASES, CONTEXTS, Config, TextOracle, derive_mask
+from qf_attack import ALPHABET, CASES, Config, TextOracle, choose_device
 
 RUN = ROOT / "qf_results"
 
@@ -115,12 +114,15 @@ class PGD:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--iters", type=int, default=100)
-    ap.add_argument("--batch", type=int, default=32)
+    ap.add_argument("--batch", type=int, default=16)
     ap.add_argument("--eta", type=float, default=1.0)
     ap.add_argument("--seed", type=int, default=2026)
+    ap.add_argument("--device", default="auto")
     args = ap.parse_args()
 
-    cfg = Config(device="cpu")  # CPU float32 (demo: 2 prompts); Gumbel/double unsupported on MPS
+    # Demo profile (2 prompts). Gumbel-softmax is unsupported on Apple MPS, so fall back to CPU there.
+    device = choose_device(args.device)
+    cfg = Config(device="cpu" if device.type == "mps" else str(device))
     cfg.sd_revision = json.loads((RUN / "manifest.json").read_text())["config"]["sd_revision"]
     oracle = TextOracle(cfg)
     pgd = PGD(oracle)

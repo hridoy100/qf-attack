@@ -60,18 +60,15 @@ target removal from CLIP score alone.
 
 Files:
 
-Section 6 of the report (pages 7-8), also included in the notebook and
-`Attack_Optimization.md`, discusses proposed objective, feature, search and
-evaluation improvements. These proposals have not been implemented or tested.
-
-- `QF_Attack_Colab.ipynb`: clean, self-contained notebook for Colab.
-- `QF_Attack_Executed.ipynb`: the same notebook with local execution outputs.
-- `output/pdf/QF_Attack_Analysis.pdf`: paper analysis with measured evidence.
-- `QF_Attack_Analysis.md`: editable analysis report.
+- `QF_Attack_Report.md`, `QF_Attack_Report.tex`, `output/pdf/QF_Attack_Report.pdf`: the report.
+- `QF_Attack_Colab.ipynb`: clean, self-contained notebook for Colab (includes the PGD cell).
+- `QF_Attack_Executed.ipynb`: the same notebook with local text-only execution outputs.
+- `QF_Attack_Analysis.md`, `output/pdf/QF_Attack_Analysis.pdf`: earlier analysis report.
+- `Attack_Optimization.md`: proposed improvements (not implemented or tested); also appended to the notebook.
 - `qf_attack.py`: standalone implementation.
+- `tools/`: PGD, embedding analysis, detector scoring, figures, report and notebook builders.
 - `requirements-colab.txt`: Colab dependency pins.
 - `qf_results/`: actual measurements and generation evidence.
-- `qf_results_bundle.zip`: results exported by the notebook.
 
 Local command after installing dependencies:
 
