@@ -16,13 +16,41 @@ from reportlab.platypus import (Image, KeepTogether, ListFlowable, ListItem, Par
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "QF_Attack_Report.md"
 OUT = ROOT / "output/pdf/QF_Attack_Report.pdf"
-FONTS = Path("/System/Library/Fonts/Supplemental")
 
-for name, file in [("Serif", "Times New Roman.ttf"), ("Serif-Bold", "Times New Roman Bold.ttf"),
-                   ("Serif-Italic", "Times New Roman Italic.ttf"),
-                   ("Serif-BoldItalic", "Times New Roman Bold Italic.ttf"),
-                   ("Mono", "Courier New.ttf"), ("Symbol", "Arial Unicode.ttf")]:
-    pdfmetrics.registerFont(TTFont(name, str(FONTS / file)))
+# Font candidates in order of preference: macOS Times New Roman, then common Linux
+# equivalents, then the DejaVu fonts bundled with matplotlib (always available).
+FONT_CANDIDATES = {
+    "Serif": ["Times New Roman.ttf", "LiberationSerif-Regular.ttf", "DejaVuSerif.ttf"],
+    "Serif-Bold": ["Times New Roman Bold.ttf", "LiberationSerif-Bold.ttf", "DejaVuSerif-Bold.ttf"],
+    "Serif-Italic": ["Times New Roman Italic.ttf", "LiberationSerif-Italic.ttf", "DejaVuSerif-Italic.ttf"],
+    "Serif-BoldItalic": ["Times New Roman Bold Italic.ttf", "LiberationSerif-BoldItalic.ttf",
+                         "DejaVuSerif-BoldItalic.ttf"],
+    "Mono": ["Courier New.ttf", "LiberationMono-Regular.ttf", "DejaVuSansMono.ttf"],
+    "Symbol": ["Arial Unicode.ttf", "DejaVuSans.ttf"],
+}
+
+
+def font_dirs():
+    import matplotlib
+    dirs = [Path("/System/Library/Fonts/Supplemental"), Path("/Library/Fonts"),
+            Path.home() / "Library/Fonts", Path("/usr/share/fonts"), Path("/usr/local/share/fonts"),
+            Path.home() / ".fonts", Path.home() / ".local/share/fonts"]
+    dirs.append(Path(matplotlib.get_data_path()) / "fonts/ttf")
+    return [d for d in dirs if d.is_dir()]
+
+
+def find_font(candidates, dirs):
+    for file in candidates:
+        for d in dirs:
+            hits = [d / file] if (d / file).is_file() else sorted(d.rglob(file))
+            if hits:
+                return hits[0]
+    raise FileNotFoundError(f"None of these fonts were found: {candidates}")
+
+
+_dirs = font_dirs()
+for name, candidates in FONT_CANDIDATES.items():
+    pdfmetrics.registerFont(TTFont(name, str(find_font(candidates, _dirs))))
 pdfmetrics.registerFontFamily("Serif", normal="Serif", bold="Serif-Bold",
                               italic="Serif-Italic", boldItalic="Serif-BoldItalic")
 

@@ -26,7 +26,8 @@ SCENE = {0: "Bicycle scene", 1: "Apple scene"}
 TARGET_POSITION = {0: 3, 1: 6}
 
 plt.rcParams.update({
-    "font.family": "Times New Roman", "font.size": 9, "text.parse_math": False,
+    "font.family": "serif", "font.size": 9,
+    "font.serif": ["Times New Roman", "Times", "Liberation Serif", "Nimbus Roman", "DejaVu Serif"], "text.parse_math": False,
     "axes.edgecolor": MUTED, "axes.labelcolor": INK, "axes.linewidth": 0.6, "axes.labelsize": 9,
     "axes.titlesize": 9.5, "axes.titlecolor": INK, "axes.titlelocation": "left",
     "xtick.color": MUTED, "ytick.color": MUTED, "xtick.labelcolor": INK, "ytick.labelcolor": INK,
