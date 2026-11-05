@@ -1,0 +1,16 @@
+# Python environments and caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Model / download caches (large; not tracked)
+.hf-cache/
+tmp/
+
+# OS / editor junk
+.DS_Store
+.idea/
+.vscode/

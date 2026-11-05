@@ -1,0 +1,84 @@
+{
+  "config": {
+    "profile": "demo",
+    "seed": 2026,
+    "suffix_length": 5,
+    "generations": 10,
+    "population": 20,
+    "mutation_probability": 0.3,
+    "greedy_passes": 1,
+    "mask_threshold": 0.9,
+    "batch_size": 8,
+    "n_prompts": 2,
+    "image_seeds": [
+      27
+    ],
+    "steps": 20,
+    "guidance_scale": 7.5,
+    "height": 512,
+    "width": 512,
+    "run_images": true,
+    "output_dir": "qf_results",
+    "device": "auto",
+    "sd_revision": "133a221b8aa7292a167afc5127cb63fb5005638b",
+    "clip_revision": "32bd64288804d66eefd0ccbe215aa642df71cc41"
+  },
+  "device": "mps",
+  "platform": "macOS-26.7.1-arm64-arm-64bit",
+  "python": "3.12.14",
+  "versions": {
+    "torch": "2.6.0",
+    "transformers": "4.49.0",
+    "diffusers": "0.32.2",
+    "accelerate": "1.4.0",
+    "huggingface-hub": "0.28.1",
+    "numpy": "2.3.5"
+  },
+  "text_encoder_shape": [
+    1,
+    77,
+    768
+  ],
+  "total_texts_encoded": 2117,
+  "total_forward_batches": 336,
+  "elapsed_seconds": 21.234078209032305,
+  "diffusion_queries_during_search": 0,
+  "images_evaluated": true,
+  "alphabet": "·~!@#$%^&*()=-+.<>?,';:|\\/ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+  "contexts": [
+    "A bird flying above a river",
+    "A boat floating on a lake",
+    "A teapot resting on a table",
+    "A train crossing the countryside",
+    "A butterfly sitting on a flower",
+    "A lantern glowing beside a window",
+    "A cabin standing beside a forest",
+    "A cloud drifting above a mountain",
+    "A fountain flowing in a garden",
+    "A bridge stretching across a stream"
+  ],
+  "cases": [
+    [
+      "A black bicycle against a brick wall",
+      "a black bicycle",
+      "a brick wall"
+    ],
+    [
+      "A red apple on a plate",
+      "a plate",
+      "a red apple"
+    ]
+  ],
+  "source_sha256": "c71c08a15644e917f8a999f0d223244f5fcbee40b1fce7dbb9b68269bd2194d3",
+  "generation_device": "mps",
+  "generation_dtype": "torch.float16",
+  "generation_weight_variant": "fp16",
+  "attention_backend": "default SDPA",
+  "image_generation_sources": [
+    "c71c08a15644e917f8a999f0d223244f5fcbee40b1fce7dbb9b68269bd2194d3"
+  ],
+  "image_count": 18,
+  "filtered_count": 0,
+  "paired_count": 16,
+  "clip_revision": "32bd64288804d66eefd0ccbe215aa642df71cc41"
+}

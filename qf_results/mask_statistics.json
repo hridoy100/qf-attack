@@ -1,0 +1,16 @@
+[
+  {
+    "case_id": 0,
+    "target": "a black bicycle",
+    "selected": 23310,
+    "total": 59136,
+    "fraction": 0.3941761255264282
+  },
+  {
+    "case_id": 1,
+    "target": "a plate",
+    "selected": 19373,
+    "total": 59136,
+    "fraction": 0.32760077714920044
+  }
+]
