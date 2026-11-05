@@ -64,8 +64,11 @@ Files:
 - `QF_Attack_Report.md`, `QF_Attack_Report.tex`, `output/pdf/QF_Attack_Report.pdf`: the report.
 - `QF_Attack_Colab.ipynb`: notebook that runs the search, PGD, image generation, and (for `demo`)
   the report's embedding analysis, OWL-ViT detector check and figures. It uses `qf_attack.py` and
-  `tools/` from the repository; uploaded alone to Colab, it clones the repository first.
-- `QF_Attack_Executed.ipynb`: the same notebook with local text-only execution outputs.
+  `tools/` from the repository; uploaded alone to Colab, it clones the repository first. It defaults
+  to the `extended` profile, writing to `qf_results_extended/`; set `PROFILE = "demo"` and
+  `OUTPUT_DIR = "qf_results"` in its settings cell for the run the report describes.
+- `QF_Attack_Executed.ipynb`: the notebook with outputs from its latest run.
+- `QF_Attack_Executed_Demo.ipynb`: the notebook with outputs from the demo run (CUDA, Argon).
 - `QF_Attack_Analysis.md`, `output/pdf/QF_Attack_Analysis.pdf`: earlier analysis report.
 - `Attack_Optimization.md`: proposed improvements (not implemented or tested); also appended to the notebook.
 - `qf_attack.py`: standalone implementation.

@@ -21,27 +21,13 @@ An independent research implementation of **Zhuang, Zhang and Liu (2023)**,
 [A Pilot Study of Query-Free Adversarial Attack against Stable Diffusion](https://arxiv.org/abs/2303.16378).
 [Authors' reference implementation](https://github.com/OPTML-Group/QF-Attack).
 
-**Run:** upload this `.ipynb` at [Google Colab](https://colab.research.google.com/), select
-**Runtime > Change runtime type > T4 GPU**, and set **Runtime Version to 2026.07**
-(Python 3.12), then run the cells in order. The pinned installation targets Python 3.12.
-[Google's runtime-version instructions](https://research.google.com/colaboratory/runtime-version-faq.html).
-Model weights require several GB of disk space. The code lives in the repository's
-`qf_attack.py` and `tools/`: run the notebook from a checkout of
-[the repository](https://github.com/hridoy100/qf-attack), or upload only this `.ipynb`
-and cell 2 clones the repository. Keep a fresh runtime for package installation.
-If Colab requests a restart after installation, restart and continue from cell 2.
+The code lives in the repository's `qf_attack.py` and `tools/`: run the notebook from a checkout of [the repository](https://github.com/hridoy100/qf-attack), or upload only this `.ipynb` and cell 2 clones the repository. Keep a fresh runtime for package installation.
 
-The default experiment attacks two benign scenes using a five-character suffix
-(plus a separating space). Search uses only the local CLIP text encoder. Diffusion
-is called **after search**, with identical initial noise across clean/attacked conditions.
+The experiment attacks benign scenes (2 in the `demo` profile, 20 in `extended`, the default here) using a five-character suffix (plus a separating space). Search uses only the local CLIP text encoder. Diffusion is called **after search**, with identical initial noise across clean/attacked conditions.
 The model's default safety checker remains enabled; filtered outputs are logged and excluded in pairs.
 
-**Scope:** equations (1)-(2), genetic and coordinate-greedy search, one-sample random,
-a genetic-budget-matched random control, and a gradient-based PGD baseline
-(encoder-only; no images are generated for its suffixes). For the `demo` profile
-it also runs the report's embedding analysis and an OWL-ViT object-detector check.
-The fixed contexts, operator choices and extended dataset are declared deviations from the paper.
-The saved outputs are actual run measurements, never copies of the paper's scores.
+**Scope:** equations (1)-(2), genetic and coordinate-greedy search, one-sample random, a genetic-budget-matched random control, and a gradient-based PGD baseline (encoder-only; no images are generated for its suffixes). For the `demo` profile it also runs the report's embedding analysis and an OWL-ViT object-detector check. The fixed contexts, operator choices and extended dataset are declared deviations from the paper. The saved outputs are actual run measurements, never copies of the paper's scores.
+
 """)
 code('''# 1. Install known versions before importing the model libraries.
 import importlib.util, subprocess, sys
@@ -59,20 +45,14 @@ else:
 ''')
 md(r"""## Objective and targeted mask
 
-For the complete CLIP final hidden-state tensor $H(x)\in\mathbb{R}^{77\times768}$,
-the untargeted objective is $\min_s\cos(\mathrm{vec}H(x),\mathrm{vec}H(x+\text{space}+s))$.
-The suffix $s$ contains exactly five characters from the reference alphabet.
+For the complete CLIP final hidden-state tensor $H(x)$, the untargeted objective is $\min_s\cos(\mathrm{vec}H(x),\mathrm{vec}H(x+\text{space}+s))$. The suffix $s$ contains exactly 5 characters from the reference alphabet.
 
-For ten fixed context pairs, define $d_i=H(c_i+\text{and}+t)-H(c_i)$ and
-$I_j=\mathbf{1}\{|\sum_i\mathrm{sign}(d_{ij})|>0.9n\}$.
-The targeted objective minimizes cosine after multiplying **both** tensors by $I$.
-With $n=10$, the strict threshold requires unanimous signs. An empty mask raises
-an error instead of changing the threshold. Token states are flattened including
-EOS padding, matching the authors' implementation. Image evaluation later uses
-CLIP's projected, normalized pooled vectors, a different representation.
+For 10 fixed context pairs, define $d_i=H(c_i+\text{and}+t)-H(c_i)$ and $I_j=\mathbf{1}\{|\sum_i\mathrm{sign}(d_{ij})|>0.9n\}$.
+The targeted objective minimizes cosine after multiplying both tensors by $I$.
+With $n=10$, the strict threshold requires unanimous signs. An empty mask raises an error instead of changing the threshold. Token states are flattened including EOS padding, matching the authors' implementation. Image evaluation later uses CLIP's projected, normalized pooled vectors, a different representation.
 
-This objective does not enforce background preservation or even a direction of
-concept removal. Evaluate target and retained concepts separately and inspect images.
+This objective does not enforce background preservation or even a direction of concept removal. Evaluate target and retained concepts separately and inspect images.
+
 """)
 code('''# 2. Load the implementation (qf_attack.py) and analysis scripts (tools/) from the repository.
 import os, warnings
@@ -92,11 +72,11 @@ print("Implementation loaded; alphabet size:", len(qf.ALPHABET))
 ''')
 code('''# 3. Experiment settings. The environment override is only for local verification.
 import os
-PROFILE = "demo"  # @param ["demo", "extended"]
+PROFILE = "extended"  # @param ["demo", "extended"]
 RUN_IMAGES = True  # @param {type:"boolean"}
-# qf_results/ in the repository holds the committed run. For a fresh run, use a new name:
-# the same folder reuses its existing images, or stops if the image settings differ.
-OUTPUT_DIR = "qf_results"  # @param {type:"string"}
+# qf_results/ holds the committed demo run that the report describes; keep it for demo.
+# Each profile needs its own folder: reusing one reuses its images, or stops if settings differ.
+OUTPUT_DIR = "qf_results_extended"  # @param {type:"string"}
 SEED = 2026  # @param {type:"integer"}
 
 factory = qf.Config if PROFILE == "demo" else qf.Config.full
