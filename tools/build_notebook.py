@@ -74,6 +74,9 @@ concept removal. Evaluate target and retained concepts separately and inspect im
 """)
 code("# 2. Write the standalone implementation (no GitHub clone required).\nfrom pathlib import Path\n" +
      "Path('qf_attack.py').write_text(" + repr((ROOT / "qf_attack.py").read_text()) + ", encoding='utf-8')\n" +
+     "import warnings\n"
+     "# Without ipywidgets, tqdm warns and falls back to text progress bars; that is fine here.\n"
+     "warnings.filterwarnings('ignore', message='IProgress not found')\n"
      "import qf_attack as qf\nprint('Implementation loaded; alphabet size:', len(qf.ALPHABET))\n")
 code('''# 3. Experiment settings. The environment override is only for local verification.
 import os
