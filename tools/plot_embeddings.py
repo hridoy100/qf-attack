@@ -2,6 +2,7 @@
 from pathlib import Path
 import csv
 import json
+import os
 
 import matplotlib
 matplotlib.use("Agg")
@@ -11,7 +12,7 @@ from matplotlib.lines import Line2D
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-RUN = ROOT / "qf_results"
+RUN = ROOT / os.environ.get("QF_OUTPUT_DIR", "qf_results")
 DATA = RUN / "embedding_analysis"
 WIDTH = 6.26  # inches: the report's text width
 
@@ -246,10 +247,15 @@ def text_vs_image():
     plt.close(fig)
 
 
-scene_grid(0)
-scene_grid(1)
+has_images = all(r["full_drop"] != "" for r in metrics)
+if has_images:
+    scene_grid(0)
+    scene_grid(1)
 token_change()
 similarity_plane()
 searches_vs_random()
-text_vs_image()
+if has_images:
+    text_vs_image()
+else:
+    print("text-only run: skipped the image grids and the text-vs-image figure")
 print("wrote figures to", DATA)

@@ -18,7 +18,7 @@ import torch
 import torch.nn.functional as F
 from transformers import CLIPTextModel, CLIPTokenizer
 
-RUN = ROOT / "qf_results"
+RUN = ROOT / os.environ.get("QF_OUTPUT_DIR", "qf_results")
 OUT = RUN / "embedding_analysis"
 SD_ID = "CompVis/stable-diffusion-v1-4"
 N_RANDOM = 500
@@ -35,10 +35,14 @@ def main():
     revision = manifest["config"]["sd_revision"]
     alphabet = manifest["alphabet"]
     attacks = list(csv.DictReader((RUN / "attack_results.csv").open(encoding="utf-8")))
-    drops = {(r["case_id"], r["mode"], r["method"]): r
-             for r in csv.DictReader((RUN / "paired_drops.csv").open())}
+    # Image drops exist only after image generation; a text-only run leaves those columns empty.
+    drops = {}
+    if (RUN / "paired_drops.csv").exists():
+        drops = {(r["case_id"], r["mode"], r["method"]): r
+                 for r in csv.DictReader((RUN / "paired_drops.csv").open())}
 
-    device = "mps" if torch.backends.mps.is_available() else "cpu"
+    device = ("cuda" if torch.cuda.is_available()
+              else "mps" if torch.backends.mps.is_available() else "cpu")
     tokenizer = CLIPTokenizer.from_pretrained(SD_ID, subfolder="tokenizer", revision=revision)
     model = CLIPTextModel.from_pretrained(SD_ID, subfolder="text_encoder", revision=revision,
                                           torch_dtype=torch.float32, use_safetensors=True).eval().to(device)
@@ -79,7 +83,7 @@ def main():
             distance = (h - clean).norm(dim=1)
             # The suffix starts where the clean prompt's end token used to be.
             first_changed = clean_len - 1
-            drop = drops[(r["case_id"], r["mode"], r["method"])]
+            drop = drops.get((r["case_id"], r["mode"], r["method"]))
             rows.append({
                 "case_id": case, "mode": r["mode"], "method": r["method"], "suffix": r["suffix"],
                 "suffix_tokens": length - clean_len,
@@ -89,9 +93,9 @@ def main():
                 "share_of_squared_change_after_end_token": float(
                     (distance[length:] ** 2).sum() / (distance ** 2).sum()),
                 "cosine_to_retained_only": cos(h, retain_only),
-                "full_drop": float(drop["full_drop"]),
-                "target_drop": float(drop["target_drop"]),
-                "retain_drop": float(drop["retain_drop"]),
+                "full_drop": float(drop["full_drop"]) if drop else "",
+                "target_drop": float(drop["target_drop"]) if drop else "",
+                "retain_drop": float(drop["retain_drop"]) if drop else "",
             })
             for pos, value in enumerate(distance.tolist()):
                 positions.append({"case_id": case, "mode": r["mode"], "method": r["method"],

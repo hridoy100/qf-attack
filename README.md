@@ -62,7 +62,8 @@ target removal from CLIP score alone.
 Files:
 
 - `QF_Attack_Report.md`, `QF_Attack_Report.tex`, `output/pdf/QF_Attack_Report.pdf`: the report.
-- `QF_Attack_Colab.ipynb`: clean, self-contained notebook for Colab (includes the PGD cell).
+- `QF_Attack_Colab.ipynb`: clean, self-contained notebook for Colab. It runs the search, PGD,
+  image generation, and (for `demo`) the report's embedding analysis, OWL-ViT detector check and figures.
 - `QF_Attack_Executed.ipynb`: the same notebook with local text-only execution outputs.
 - `QF_Attack_Analysis.md`, `output/pdf/QF_Attack_Analysis.pdf`: earlier analysis report.
 - `Attack_Optimization.md`: proposed improvements (not implemented or tested); also appended to the notebook.

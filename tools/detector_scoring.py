@@ -17,7 +17,7 @@ import torch
 from PIL import Image
 from transformers import OwlViTForObjectDetection, OwlViTProcessor
 
-RUN = ROOT / "qf_results"
+RUN = ROOT / os.environ.get("QF_OUTPUT_DIR", "qf_results")
 OUT = RUN / "embedding_analysis"
 MODEL = "google/owlvit-base-patch32"
 THRESHOLD = 0.10  # presence cut-off on OWL-ViT confidence

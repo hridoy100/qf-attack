@@ -1,6 +1,7 @@
 """Draw the detector figure from qf_results/embedding_analysis/detector_scores.csv."""
 from pathlib import Path
 import csv
+import os
 
 import matplotlib
 matplotlib.use("Agg")
@@ -8,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA = ROOT / "qf_results/embedding_analysis"
+DATA = ROOT / os.environ.get("QF_OUTPUT_DIR", "qf_results") / "embedding_analysis"
 WIDTH = 6.26
 THRESHOLD = 0.10
 FULL, MASKED, INK, MUTED, GRID, NEUTRAL = "#2a78d6", "#eb6834", "#0b0b0b", "#52514e", "#e4e3df", "#8a8983"

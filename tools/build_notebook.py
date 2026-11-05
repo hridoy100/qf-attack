@@ -36,8 +36,9 @@ The model's default safety checker remains enabled; filtered outputs are logged 
 
 **Scope:** equations (1)-(2), genetic and coordinate-greedy search, one-sample random,
 a genetic-budget-matched random control, and a gradient-based PGD baseline
-(encoder-only; no images are generated for its suffixes). The fixed
-contexts, operator choices and extended dataset are declared deviations from the paper.
+(encoder-only; no images are generated for its suffixes). For the `demo` profile
+it also runs the report's embedding analysis and an OWL-ViT object-detector check.
+The fixed contexts, operator choices and extended dataset are declared deviations from the paper.
 The saved outputs are actual run measurements, never copies of the paper's scores.
 """)
 code('''# 1. Install known versions before importing the model libraries.
@@ -258,6 +259,55 @@ for path in sorted(Path(cfg.output_dir).glob("grid_*.png")):
     display(Markdown("**" + path.name + "**"))
     display(Image(filename=str(path)))
 ''')
+ANALYSIS_TOOLS = ("embedding_analysis.py", "detector_scoring.py", "plot_embeddings.py", "plot_detector.py")
+md("""## Report analysis: embedding, detector and figures
+
+These cells reproduce the analysis and Figures 1-7 of the accompanying report.
+The **embedding analysis** re-encodes every recorded suffix, checks that it
+reproduces the recorded cosines, and measures where the change falls (token
+positions, padding, the targeted mask) and how the suffixes compare with 500
+random ones. The **detector check** scores every generated image with OWL-ViT,
+an open-vocabulary object detector not used anywhere in the attack, to see
+whether the target object is still present (threshold 0.10). The detector
+model is downloaded on first use.
+
+The scripts are written for the `demo` profile's two scenes and image seed 27,
+so they are skipped for `extended`. In a text-only run the detector and the
+two image-dependent figures are skipped. Outputs go to `<output dir>/embedding_analysis/`.
+""")
+code("# 7b. Write the report-analysis scripts (same files as the repository's tools/).\n" +
+     "Path('tools').mkdir(exist_ok=True)\n" +
+     "".join(f"Path('tools/{name}').write_text({(ROOT / 'tools' / name).read_text()!r}, encoding='utf-8')\n"
+             for name in ANALYSIS_TOOLS) +
+     "print('Wrote', ', '.join(" + repr(list(ANALYSIS_TOOLS)) + "))\n")
+code('''# 7c. Run the embedding analysis, the OWL-ViT detector check and the report figures.
+import subprocess
+
+def run_tool(name):
+    env = dict(os.environ, QF_OUTPUT_DIR=cfg.output_dir)
+    result = subprocess.run([sys.executable, "tools/" + name], env=env, capture_output=True, text=True)
+    print(f"--- {name}\\n{result.stdout[-1500:]}")
+    if result.returncode != 0:
+        raise RuntimeError(f"{name} failed:\\n{result.stderr[-3000:]}")
+
+analysis_dir = Path(cfg.output_dir) / "embedding_analysis"
+if PROFILE != "demo":
+    print("Skipped: the report analysis is written for the demo profile's two scenes.")
+else:
+    run_tool("embedding_analysis.py")
+    if cfg.run_images:
+        run_tool("detector_scoring.py")
+    run_tool("plot_embeddings.py")
+    if cfg.run_images:
+        run_tool("plot_detector.py")
+        display(pd.read_csv(analysis_dir / "detector_summary.csv"))
+    for name in ("fig_images_bicycle", "fig_images_apple", "fig_token_change", "fig_similarity_plane",
+                 "fig_searches_vs_random", "fig_text_vs_image", "fig_detector"):
+        path = analysis_dir / (name + ".png")
+        if path.exists():
+            display(Markdown("**" + path.name + "**"))
+            display(Image(filename=str(path)))
+''')
 code('''# 8. Generate the analysis directly from this run and download all evidence.
 report_path = qf.write_run_report(cfg)
 display(Markdown(report_path.read_text()))
@@ -279,12 +329,14 @@ md("""## Read the outputs
 - `image_scores.csv`: original/target/retained image CLIP cosine and safety flags.
 - `paired_drops.csv`, `image_summary.csv`: paired differences and prompt-level summaries.
 - `image_manifest.csv`, `scheduler.json`, `images/`, `grid_*.png`: generation evidence.
+- `embedding_analysis/`: per-suffix embedding metrics, distances by token position,
+  the 500-random-suffix reference, OWL-ViT detector scores and the report figures.
 
 Keep random and optimized suffixes in the report, including negative or null results.
-For claims of selective removal, add blinded human or independent detector labels
-for target presence and retained-content preservation; this notebook does not
-pretend CLIP similarity is an object detector. Encoder and evaluator share a model
-family, so an independent evaluator is a useful follow-up.
+CLIP similarity is not an object detector. The OWL-ViT check above gives a
+separate measure of target presence, but OWL-ViT also has a CLIP-based backbone,
+so blinded human labels or a detector with no shared backbone would strengthen
+claims of selective removal, especially for the retained content.
 
 Paper Table 1 reports untargeted genetic mean 0.203 vs. clean 0.277 and targeted
 genetic mean 0.186 vs. clean 0.229. These are **published reference values**, not
